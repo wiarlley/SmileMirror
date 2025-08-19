@@ -72,3 +72,25 @@ document.addEventListener('DOMContentLoaded', () => {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 });
+    // // Lista das imagens PNG com fundo transparente
+    // const imagens = [
+    //   "img/1-removebg-preview.png",
+    //   "img/2-removebg-preview.png",
+    //   "img/3-removebg-preview.png",
+    //   "img/4-removebg-preview.png",
+    //   "img/5-removebg-preview.png",
+    //   "img/6-removebg-preview.png"
+    // ];
+
+    // let index = 0;
+    // const imgElement = document.getElementById("imagem-centro");
+    
+
+    // function trocarImagem() {
+    //   index = (index + 1) % imagens.length;
+    //   imgElement.src = imagens[index];
+    // }
+
+    // // Troca a cada 3 segundos
+    // setInterval(trocarImagem, 1000);
+  

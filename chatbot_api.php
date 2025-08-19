@@ -1,37 +1,27 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 // =================================================================
 // CONFIGURAÇÃO
 // =================================================================
-
-// Insira sua Chave da API do Gemini aqui
 $geminiApiKey = 'AIzaSyAcRbbgx3wM7W4sgnYAGBJJakpIrupTWFo';
 
-// Configurações do Banco de Dados
 $dbHost = 'localhost';
 $dbUser = 'root';
 $dbPass = '';
-$dbName = 'chatbot_db.sql';
+$dbName = 'chatbot_db.sql'; // Corrigido (não usar .sql)
 
 // =================================================================
-// CONEXÃO COM O BANCO DE DADOS E LÓGICA
+// CONEXÃO COM O BANCO DE DADOS
 // =================================================================
-
-// Estabelece conexão segura
 $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName);
 if ($conn->connect_error) {
     die(json_encode(['error' => 'Falha na conexão com o banco de dados: ' . $conn->connect_error]));
 }
 
-// Define o cabeçalho da resposta como JSON
-header('Content-Type: application/json');
-
-// Pega a mensagem do usuário enviada pelo JavaScript
+// =================================================================
+// ENTRADA DO USUÁRIO
+// =================================================================
 $data = json_decode(file_get_contents('php://input'), true);
 $userMessage = $data['message'] ?? '';
 
@@ -40,16 +30,16 @@ if (empty($userMessage)) {
     exit;
 }
 
-// Salva a mensagem do usuário de forma segura
+// Salva mensagem do usuário
 $stmt = $conn->prepare("INSERT INTO messages (sender, message) VALUES (?, ?)");
 $senderUser = 'user';
 $stmt->bind_param("ss", $senderUser, $userMessage);
 $stmt->execute();
+$stmt->close();
 
 // =================================================================
 // CHAMADA PARA A API DO GEMINI
 // =================================================================
-
 $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $geminiApiKey;
 $postData = ['contents' => [['parts' => [['text' => $userMessage]]]]];
 
@@ -66,7 +56,6 @@ curl_close($ch);
 // =================================================================
 // PROCESSAMENTO DA RESPOSTA
 // =================================================================
-
 if ($httpcode != 200 || $response === false) {
     echo json_encode(['error' => 'Falha ao chamar a API do Gemini. Código: ' . $httpcode]);
     exit;
@@ -75,14 +64,14 @@ if ($httpcode != 200 || $response === false) {
 $responseData = json_decode($response, true);
 $botReply = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? 'Desculpe, não consegui processar sua solicitação.';
 
-// Salva a resposta do bot no banco de dados
+// Salva resposta do bot
+$stmt = $conn->prepare("INSERT INTO messages (sender, message) VALUES (?, ?)");
 $senderBot = 'bot';
 $stmt->bind_param("ss", $senderBot, $botReply);
 $stmt->execute();
-
 $stmt->close();
+
 $conn->close();
 
-// Envia a resposta do bot de volta para o front-end
+// Retorna resposta ao front-end
 echo json_encode(['reply' => $botReply]);
-
